@@ -1,0 +1,72 @@
+version: '3.8'
+
+# ══════════════════════════════════════════
+#  SOWAB — Docker Compose
+#  تشغيل: docker compose up -d
+# ══════════════════════════════════════════
+
+services:
+
+  # ─── PostgreSQL ────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: sowab_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sowab_db
+      POSTGRES_USER: sowab_user
+      POSTGRES_PASSWORD: sowab_strong_pass_2024
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sowab_user -d sowab_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend ───────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sowab_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: sowab_db
+      DB_USER: sowab_user
+      DB_PASSWORD: sowab_strong_pass_2024
+      JWT_SECRET: change_this_to_random_64_char_string_in_production
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:3000
+      UPLOAD_DIR: /app/uploads
+      MAX_FILE_SIZE: 10485760
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "3001:3001"
+
+  # ─── Frontend (Nginx) ──────────────────
+  frontend:
+    image: nginx:alpine
+    container_name: sowab_frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  uploads_data:
