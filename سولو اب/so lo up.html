@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>so-lo-up - تواصل ولقاء</title>
+    <meta name="description" content="تطبيق تواصل شامل يجمع المراسلة الآمنة والمحفظة الإلكترونية والخدمات المصغرة">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22so-lo-up%22,%22short_name%22:%22so-lo-up%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23007aff%22,%22dir%22:%22rtl%22,%22lang%22:%22ar%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23007aff'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='white' font-family='Arial'%3ES%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, 'Noto Sans Arabic', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #111214;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        /* حاوية التطبيق الرئيسية */
+        .app-wrapper {
+            width: 100%;
+            max-width: 500px;
+            height: 90vh;
+            min-height: 600px;
+            background: #ffffff;
+            border-radius: 36px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+        }
+
+        /* رأس التطبيق */
+        .app-header {
+            background: linear-gradient(98deg, #0066cc, #0099ff);
+            padding: 20px 20px 16px;
+            color: white;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .app-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .app-name small {
+            font-size: 0.8rem;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        /* منطقة المحتوى الرئيسية */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #f8f9fc;
+        }
+
+        /* تبويبات التنقل السفلية */
+        .bottom-nav {
+            display: flex;
+            background: white;
+            border-top: 1px solid #eef2f6;
+            padding: 8px 16px 12px;
+            gap: 20px;
+            justify-content: space-around;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            background: none;
+            border: none;
+            padding: 8px 0;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #5f6b7a;
+            transition: 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-item.active {
+            color: #007aff;
+            background: #eef3ff;
+        }
+
+        .nav-icon {
+            font-size: 1.6rem;
+        }
+
+        /* الشاشات (views) */
+        .view {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .view.active-view {
+            display: flex;
+        }
+
+        /* شاشة الدردشة */
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eef2f6;
+        }
+
+        .chat-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #1f2a3e;
+        }
+
+        .encrypt-badge {
+            font-size: 0.7rem;
+            background: #e9ecef;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #2c3e66;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 4px;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 22px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-break: break-word;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            align-self: flex-start;
+            border: 1px solid #eef2f6;
+        }
+
+        .message-bubble.me {
+            background: #007aff;
+            color: white;
+            align-self: flex-end;
+            border: none;
+        }
+
+        .message-time {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 50px;
+            border: 1px solid #dee2e6;
+            margin-top: 8px;
+        }
+
+        .input-row input {
+            flex: 1;
+            border: none;
+            padding: 12px 8px;
+            font-size: 1rem;
+            background: transparent;
+            outline: none;
+        }
+
+        .input-row button {
+            background: #007aff;
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 40px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        /* المحفظة */
+        .wallet-card {
+            background: linear-gradient(145deg, #1e2b3c, #0f1a24);
+            border-radius: 32px;
+            padding: 24px;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .balance {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 12px 0;
+        }
+
+        .wallet-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .wallet-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 12px 16px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        /* الخدمات المصغرة */
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .service-card {
+            background: white;
+            padding: 16px 8px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #eef2f6;
+        }
+
+        .service-icon {
+            font-size: 2.2rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* رسالة ترحيب */
+        .empty-chat {
+            text-align: center;
+            color: #8e9eae;
+            padding: 40px 20px;
+        }
+
+        /* تذييل صغير */
+        .app-footer {
+            font-size: 0.6rem;
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fc;
+            color: #6c7a8a;
+            border-top: 1px solid #eef2f6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <div class="app-header">
+        <div class="logo-area">
+            <span class="app-name">so-lo-up <small>⋆</small></span>
+            <span class="badge">آمنة | مشفرة</span>
+        </div>
+        <div class="badge">🇪🇬 </div>
+    </div>
+
+    <div class="main-content">
+        <!-- شاشة الدردشة -->
+        <div id="chatView" class="view active-view">
+            <div class="chat-header">
+                <div class="chat-title">المحادثات الخاصة</div>
+                <div class="encrypt-badge">🔐 تشفير طرف إلى طرف</div>
+            </div>
+            <div id="messagesList" class="messages-container">
+                <!-- الرسائل ستظهر هنا ديناميكياً -->
+                <div class="empty-chat">✨ أهلاً بك! ابدأ محادثتك الآن</div>
+            </div>
+            <div class="input-row">
+                <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+                <button id="sendMsgBtn">📨</button>
+            </div>
+        </div>
+
+        <!-- شاشة المحفظة -->
+        <div id="walletView" class="view">
+            <div class="wallet-card">
+                <div>💼 رصيد المحفظة</div>
+                <div class="balance" id="walletBalance">0.00</div>
+                <div>ر.س | عملة رقمية</div>
+                <div class="wallet-actions">
+                    <button class="wallet-btn" id="addFundsBtn">➕ إيداع</button>
+                    <button class="wallet-btn" id="payFriendBtn">🤝 تحويل</button>
+                </div>
+            </div>
+            <div style="padding: 8px 0;">
+                <p style="color:#2c3e66; font-size:0.85rem;">🔒 تحكم كامل بأموالك | تقنية دفع آمنة</p>
+                <p style="color:#5f6b7a; font-size:0.75rem; margin-top: 12px;">آخر معاملة: اليوم</p>
+            </div>
+        </div>
+
+        <!-- شاشة الخدمات المصغرة -->
+        <div id="servicesView" class="view">
+            <h3 style="margin-bottom: 12px;">📱 الخدمات المصغّرة</h3>
+            <p style="color:#5f6b7a; font-size:0.85rem; margin-bottom: 16px;">منصة متكاملة مستوحاة من الابتكار الصيني</p>
+            <div class="mini-grid" id="servicesGrid">
+                <div class="service-card" data-service="taxi">
+                    <span class="service-icon">🚕</span>
+                    <div>طلب سيارة</div>
+                </div>
+                <div class="service-card" data-service="food">
+                    <span class="service-icon">🍜</span>
+                    <div>توصيل طلبات</div>
+                </div>
+                <div class="service-card" data-service="ticket">
+                    <span class="service-icon">🎟️</span>
+                    <div>حجز تذاكر</div>
+                </div>
+                <div class="service-card" data-service="gov">
+                    <span class="service-icon">🏛️</span>
+                    <div>خدمات حكومية</div>
+                </div>
+                <div class="service-card" data-service="health">
+                    <span class="service-icon">💊</span>
+                    <div>استشارة طبية</div>
+                </div>
+                <div class="service-card" data-service="shop">
+                    <span class="service-icon">🛍️</span>
+                    <div>تسوق فوري</div>
+                </div>
+            </div>
+            <div style="margin-top: 24px; background:#eef3ff; border-radius: 28px; padding: 16px; text-align:center;">
+                🌟 قريباً: منصة للمطورين لإنشاء خدماتهم المصغّرة داخل التطبيق
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" data-nav="chat">
+            <span class="nav-icon">💬</span>
+            <span>دردشة</span>
+        </button>
+        <button class="nav-item" data-nav="wallet">
+            <span class="nav-icon">💳</span>
+            <span>محفظتي</span>
+        </button>
+        <button class="nav-item" data-nav="services">
+            <span class="nav-icon">📱</span>
+            <span>خدمات</span>
+        </button>
+    </div>
+    <div class="app-footer">
+        so-lo-up • تجربة تواصل ذكية
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- بيانات التطبيق ----------
+        let currentUserId = "user_" + Math.floor(Math.random() * 10000);
+        let messages = [];      // تخزين الرسائل {text, sender, time}
+        let walletBalance = 1250.75;   // رصيد افتراضي
+        
+        // عناصر DOM
+        const messagesContainer = document.getElementById('messagesList');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendMsgBtn');
+        const walletBalanceSpan = document.getElementById('walletBalance');
+        
+        // وظائف مساعدة لتخزين الرسائل محلياً (بسيطة)
+        function loadMessages() {
+            const stored = localStorage.getItem('soloup_messages');
+            if(stored) {
+                try {
+                    messages = JSON.parse(stored);
+                } catch(e) { messages = []; }
+            }
+            if(messages.length === 0) {
+                // رسالة ترحيبية
+                messages.push({
+                    text: "مرحباً بك في so-lo-up! محادثاتك مشفرة وآمنة",
+                    sender: "system",
+                    time: Date.now()
+                });
+                saveMessages();
+            }
+            renderMessages();
+        }
+        
+        function saveMessages() {
+            localStorage.setItem('soloup_messages', JSON.stringify(messages));
+        }
+        
+        // تشفير رمزي (Base64) لمحاكاة التشفير
+        function encryptDemo(text) {
+            return btoa(unescape(encodeURIComponent(text)));
+        }
+        
+        function addMessage(text, isSelf = true) {
+            if(!text.trim()) return;
+            const encryptedVersion = encryptDemo(text);
+            const newMsg = {
+                text: text,
+                sender: isSelf ? currentUserId : "friend",
+                time: Date.now(),
+                encrypted: encryptedVersion  // توضيح التشفير
+            };
+            messages.push(newMsg);
+            saveMessages();
+            renderMessages();
+        }
+        
+        function renderMessages() {
+            if(!messagesContainer) return;
+            if(messages.length === 0) {
+                messagesContainer.innerHTML = '<div class="empty-chat">✨ لا توجد رسائل بعد، ابدأ المحادثة</div>';
+                return;
+            }
+            let html = '';
+            for(let msg of messages) {
+                const isMe = (msg.sender === currentUserId);
+                const timeFormatted = new Date(msg.time).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+                html += `
+                    <div class="message-bubble ${isMe ? 'me' : ''}">
+                        ${escapeHtml(msg.text)}
+                        <span class="message-time">${timeFormatted} ${isMe ? '🔒' : ''}</span>
+                    </div>
+                `;
+            }
+            messagesContainer.innerHTML = html;
+            // تمرير لأسفل تلقائي
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+        
+        // إرسال رسالة
+        function sendMessageHandler() {
+            const txt = messageInput.value.trim();
+            if(txt === "") return;
+            addMessage(txt, true);
+            messageInput.value = "";
+            // محاكاة رد آلي (اختياري لإظهار الحيوية)
+            setTimeout(() => {
+                if(Math.random() > 0.7) {
+                    const autoReplies = ["ممتاز! استمر 👏", "أنا معك دائماً", "so-lo-up يوفر لك الأمان"];
+                    const reply = autoReplies[Math.floor(Math.random() * autoReplies.length)];
+                    addMessage(reply, false);
+                }
+            }, 800);
+        }
+        
+        // وظائف المحفظة
+        function updateWalletUI() {
+            if(walletBalanceSpan) walletBalanceSpan.innerText = walletBalance.toFixed(2);
+            localStorage.setItem('soloup_wallet', walletBalance);
+        }
+        
+        function loadWallet() {
+            const storedWallet = localStorage.getItem('soloup_wallet');
+            if(storedWallet !== null && !isNaN(parseFloat(storedWallet))) {
+                walletBalance = parseFloat(storedWallet);
+            } else {
+                walletBalance = 1250.75;
+            }
+            updateWalletUI();
+        }
+        
+        // معاملات المحفظة
+        function addFunds() {
+            let amount = prompt("💰 إيداع رصيد: أدخل المبلغ (ريال سعودي)", "100");
+            if(amount && !isNaN(parseFloat(amount))) {
+                let val = parseFloat(amount);
+                if(val > 0) {
+                    walletBalance += val;
+                    updateWalletUI();
+                    alert(`تم إضافة ${val.toFixed(2)} ر.س بنجاح`);
+                } else alert("مبلغ غير صالح");
+            }
+        }
+        
+        function transferToFriend() {
+            let amount = prompt("🤝 تحويل إلى صديق: أدخل المبلغ", "50");
+            if(amount && !isNaN(parseFloat(amount))) {
+                let val = parseFloat(amount);
+                if(val > 0 && val <= walletBalance) {
+                    walletBalance -= val;
+                    updateWalletUI();
+                    alert(`تم تحويل ${val.toFixed(2)} ر.س إلى الصديق (محاكاة)`);
+                    // إضافة رسالة داخل الدردشة (محاكاة تحويل)
+                    addMessage(`💰 تم تحويل ${val.toFixed(2)} ر.س إلى المستخدم (محفظة so-lo-up)`, true);
+                } else if(val > walletBalance) {
+                    alert("الرصيد غير كافٍ");
+                } else alert("مبلغ غير صحيح");
+            }
+        }
+        
+        // الخدمات المصغرة
+        function handleMiniService(serviceId) {
+            const serviceMessages = {
+                taxi: "🚕 طلب سيارة: يتم توجيهك إلى أقرب سائق (خدمة قيد التشغيل).",
+                food: "🍜 أشهر المطاعم متاحة الآن، اختر طلبك واستمتع بالتوصيل السريع.",
+                ticket: "🎟️ حجز تذاكر السينما والحفلات عبر المنصة الرقمية.",
+                gov: "🏛️ خدمات حكومية: تجديد جواز، استخراج وثائق، دفع المخالفات.",
+                health: "💊 استشارة طبية عبر الفيديو مع أطباء معتمدين.",
+                shop: "🛍️ تسوق من آلاف المتاجر مع توصيل مجاني."
+            };
+            const msg = serviceMessages[serviceId] || "هذه الخدمة ستصبح متاحة قريباً ضمن منظومة so-lo-up المتكاملة.";
+            alert(msg);
+            // إضافة سجل في الدردشة كتنبيه
+            addMessage(`📱 الخدمة المصغّرة: ${msg.substring(0, 60)}...`, true);
+        }
+        
+        // التنقل بين التبويبات
+        function switchView(viewId) {
+            // إخفاء جميع الشاشات
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(`${viewId}View`).classList.add('active-view');
+            // تحديث حالة الأزرار
+            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+            const activeNav = document.querySelector(`.nav-item[data-nav="${viewId}"]`);
+            if(activeNav) activeNav.classList.add('active');
+            
+            // عند فتح المحفظة نقوم بتحديث الرصيد
+            if(viewId === 'wallet') updateWalletUI();
+        }
+        
+        // ربط الأحداث
+        function bindEvents() {
+            if(sendButton) sendButton.addEventListener('click', sendMessageHandler);
+            if(messageInput) messageInput.addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') sendMessageHandler();
+            });
+            
+            // أزرار التنقل
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const navTarget = btn.getAttribute('data-nav');
+                    if(navTarget === 'chat') switchView('chat');
+                    else if(navTarget === 'wallet') switchView('wallet');
+                    else if(navTarget === 'services') switchView('services');
+                });
+            });
+            
+            // أحداث المحفظة
+            const addBtn = document.getElementById('addFundsBtn');
+            const payBtn = document.getElementById('payFriendBtn');
+            if(addBtn) addBtn.addEventListener('click', addFunds);
+            if(payBtn) payBtn.addEventListener('click', transferToFriend);
+            
+            // أحداث الخدمات المصغرة
+            document.querySelectorAll('.service-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const service = card.getAttribute('data-service');
+                    if(service) handleMiniService(service);
+                });
+            });
+        }
+        
+        // تسجيل Service Worker بسيط لجعل التطبيق قابل للتثبيت PWA
+        if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(e => console.log("SW not ready:", e));
+            // إضافة sw ديناميكي لأن الملف غير موجود على الخادم الحقيقي، ولكن ننشئ sw وهمي في الذاكرة عبر blob
+            // حتى يعمل التثبيت على Netlify أو مضيف محلي: سنقوم بإنشاء Service Worker وهمي باستخدام blob URL.
+            // لكن بما أننا في ملف واحد، سنقوم بحقن Service Worker عبر createObjectURL
+            const swCode = `self.addEventListener('install', event => { self.skipWaiting(); event.waitUntil(caches.open('soloup-v1').then(cache => cache.addAll(['/']))); }); self.addEventListener('fetch', event => { event.respondWith(fetch(event.request).catch(() => caches.match(event.request))); });`;
+            const blob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).then(reg => console.log("SW registered", reg));
+        }
+        
+        // تهيئة التطبيق
+        function init() {
+            loadMessages();
+            loadWallet();
+            bindEvents();
+            // التأكد من وجود رسالة ترحيب إذا كانت فارغة تماماً
+            if(messages.length === 0) {
+                messages.push({text: "مرحباً! so-lo-up هو منصتك المتكاملة للتواصل والخدمات.", sender: "system", time: Date.now()});
+                saveMessages();
+                renderMessages();
+            }
+            // إضافة حدث توجيه أولي
+            if(window.location.hash === '#wallet') switchView('wallet');
+            else if(window.location.hash === '#services') switchView('services');
+            else switchView('chat');
+        }
+        
+        init();
+    })();
+</script>
+</body>
+</html>
